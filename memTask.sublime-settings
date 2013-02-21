@@ -1,0 +1,6 @@
+{
+	// Stop counting time when Time in ms
+	// Default time is 5 min = 300
+	"idle" : 300,
+	"file_path": "\\User\\memTask.json"
+}

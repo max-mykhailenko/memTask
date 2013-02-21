@@ -1,0 +1,6 @@
+[
+	{
+		"keys": ["ctrl+super+t"],
+		"command": "show_time"
+	}
+]
