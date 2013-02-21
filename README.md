@@ -1,4 +1,4 @@
-sublime-memTask
+memTask
 ===============
 
 memTask will remember all time which you spent in Sublime Text 2
