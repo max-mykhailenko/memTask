@@ -1,4 +1,8 @@
 sublime-memTask
 ===============
 
-memTask is the task manager for Sublime text 2 with redmine connnector and time tracking
+memTask will remember all time which you spent in Sublime Text 2
+
+Version 0.1:
+	- ctrl+alt+t will show all time. You can save this file with specific date in some folder, add comments
+	- you can change idle time in settings
