@@ -3,7 +3,11 @@ memTask
 
 memTask will remember all time which you spent in Sublime Text 2
 
-WARNING! Tested only on windows. If you have some problems on other OS please add issues.
+Tested on:
+- Windows 8
+- Mac OS X 10.7.5
+
+WARNING! If you have some problems on other OS please add issues.
 
 ## Changelog
 
