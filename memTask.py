@@ -128,19 +128,18 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
         def printLine(edit, tree, level):
             forkAmount = 0
             for key, value in tree.iteritems():
-                amount = 0
-                view.insert(edit, view.size(), "\n")
-                i = 0
-                while i < level:
-                    view.insert(edit, view.size(), u"  ")
-                    i += 1
-                # Сделать function style вывод
-                view.insert(edit, view.size(), key)
-                tempViewSize = view.size()
                 if key == 'time':
                     amount = value
-                    view.insert(edit, view.size(), ': ' + MT.SecToHM(value))
+                    # view.insert(edit, view.size(), ': ' + MT.SecToHM(value))
                 else:
+                    amount = 0
+                    view.insert(edit, view.size(), "\n")
+                    i = 0
+                    while i < level:
+                        view.insert(edit, view.size(), u"  ")
+                        i += 1
+                    view.insert(edit, view.size(), key)
+                    tempViewSize = view.size()
                     amount = printLine(edit, tree[key], level + 1)
                     view.insert(edit, tempViewSize, ': ' + MT.SecToHM(amount))
                     forkAmount += amount

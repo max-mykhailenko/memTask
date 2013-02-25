@@ -18,7 +18,7 @@
 			<key>match</key>
 			<string>.*:(?!\d\d)</string>
 			<key>name</key>
-			<string>keyword.control.issue</string>
+			<string>string.issue</string>
 		</dict>
 	</array>
 	<key>scopeName</key>
