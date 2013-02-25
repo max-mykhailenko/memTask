@@ -1,0 +1,6 @@
+[
+  {
+      "caption": "memTask: Show spent time",
+      "command": "show_time"
+  }
+]
