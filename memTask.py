@@ -81,7 +81,7 @@ class memTask(sublime_plugin.EventListener):
         except IOError as e:
             self.WriteBaseToFile({})
             data = {}
-            print 'Redmine: Database file created.' + str(e)
+            print 'memTask: Database file created.' + str(e)
             return data
 
     def WriteBaseToFile(self, data):
@@ -101,7 +101,7 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
     def run(self):
         # Может стоит файл все же сразу куда нить сохранять
         view = self.window.new_file()
-        view.set_syntax_file('Packages/Redmine/' + __name__ + '.tmLanguage')
+        view.set_syntax_file('Packages/memTask/' + __name__ + '.tmLanguage')
         Tree = lambda: defaultdict(Tree)
         tree = Tree()
         base = MT.ReadBaseFromFile()
