@@ -5,6 +5,7 @@ import json
 import datetime
 from pprint import pprint
 from collections import defaultdict
+import platform
 
 
 class memTask(sublime_plugin.EventListener):
@@ -111,7 +112,10 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
         def treeify(seq):
             ret = {}
             for path in seq:
-                seq[path]['pathArray'] = path.split('\\')
+                if platform.system() == 'Windows':
+                    seq[path]['pathArray'] = path.split('\\')
+                else:
+                    seq[path]['pathArray'] = path.split('/')
                 # Не брать файлы с временных папок
                 if 'temp' not in seq[path]['pathArray'] and 'Temp' not in seq[path]['pathArray']:
                     cur = ret
