@@ -3,7 +3,6 @@ import sublime
 import sublime_plugin
 import json
 import datetime
-from pprint import pprint
 from collections import defaultdict
 import platform
 
@@ -15,10 +14,17 @@ class memTask(sublime_plugin.EventListener):
             settings = sublime.load_settings(__name__ + '.sublime-settings')
             self.setting['idle'] = settings.get('idle')
             self.setting['file_path'] = settings.get('file_path')
+            self.setting['date_format'] = settings.get('date_format')
+
+        if platform.system() == 'Windows':
+            self.dirSep = '\\'
+        else:
+            self.dirSep = '/'
 
         self.stopTimer = True
         self.fileName = False
         self.fileView = False
+        self.today = datetime.datetime.now().strftime(self.setting['date_format'])
         self.base = self.ReadBaseFromFile()
 
     def ElapsedTime(self):
@@ -29,14 +35,15 @@ class memTask(sublime_plugin.EventListener):
                 self.stopTimer = True
                 return
             else:
-                if self.fileName in self.base:
-                    self.base[self.fileName]["time"] = int(self.base[self.fileName]["time"]) + int(5)
+                if self.fileName is not None:
+                    if self.today + self.dirSep + self.fileName in self.base:
+                        self.base[self.today + self.dirSep + self.fileName]["time"] = int(self.base[self.today + self.dirSep + self.fileName]["time"]) + int(5)
+                        self.WriteBaseToFile(self.base)
+                    else:
+                        self.base[self.today + self.dirSep + self.fileName] = {"time": 5}
+                    self.SetStatus('elapsedTime', 'Elapsed time: ' + str(self.SecToHM(self.base[self.today + self.dirSep + self.fileName]["time"])))
                     self.WriteBaseToFile(self.base)
-                else:
-                    self.base[self.fileName] = {"time": 5}
-                self.SetStatus('elapsedTime', 'Elapsed time: ' + str(self.SecToHM(self.base[self.fileName]["time"])))
-                self.WriteBaseToFile(self.base)
-                sublime.set_timeout(self.ElapsedTime, 5000)
+                    sublime.set_timeout(self.ElapsedTime, 5000)
         else:
             self.EraseStatus('elapsedTime')
 
@@ -93,11 +100,6 @@ class memTask(sublime_plugin.EventListener):
 MT = memTask()
 
 
-class TimeFileEvents(sublime_plugin.EventListener):
-    def on_close(self, view):
-        print 1
-
-
 class ShowTimeCommand(sublime_plugin.WindowCommand):
     def run(self):
         # Может стоит файл все же сразу куда нить сохранять
@@ -107,15 +109,10 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
         tree = Tree()
         base = MT.ReadBaseFromFile()
 
-        TimeFileEvents()
-
         def treeify(seq):
             ret = {}
             for path in seq:
-                if platform.system() == 'Windows':
-                    seq[path]['pathArray'] = path.split('\\')
-                else:
-                    seq[path]['pathArray'] = path.split('/')
+                seq[path]['pathArray'] = path.split(MT.dirSep)
                 # Не брать файлы с временных папок
                 if 'temp' not in seq[path]['pathArray'] and 'Temp' not in seq[path]['pathArray']:
                     cur = ret
