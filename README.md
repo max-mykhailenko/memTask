@@ -9,19 +9,14 @@ Tested on:
 
 WARNING! If you have some problems on other OS please add issues.
 
-## Instruction
+## Usage
 
-- **mac users**
-  - pull
-  - goto memTask package settings, copy from default to user "file_path".
-  - Change it from "\\User\\memTask.json" to "/User/memTask.json"
-
-- **windows users**
+- **mac and windows users**
   - just pull
-
+	- ctrl+alt+t (ctrl+super+t on mac) will show all time. You can save this file with specific date in some folder, add comments
 
 ## Changelog
 
 - **Version 0.1**
-  - ctrl+alt+t (ctrl+super+t on mac) will show all time. You can save this file with specific date in some folder, add comments
   - you can change idle time in settings
+  - current date as root of tree

@@ -13,14 +13,14 @@ class memTask(sublime_plugin.EventListener):
             self.setting = {}
             settings = sublime.load_settings(__name__ + '.sublime-settings')
             self.setting['idle'] = settings.get('idle')
-            self.setting['file_path'] = settings.get('file_path')
             self.setting['date_format'] = settings.get('date_format')
 
         if platform.system() == 'Windows':
-            self.dirSep = '\\'
+            self.dirSep = "\\"
         else:
             self.dirSep = '/'
 
+        self.setting['file_path'] = self.dirSep + "User" + self.dirSep + "memTask.json"
         self.stopTimer = True
         self.fileName = False
         self.fileView = False
@@ -102,7 +102,6 @@ MT = memTask()
 
 class ShowTimeCommand(sublime_plugin.WindowCommand):
     def run(self):
-        # Может стоит файл все же сразу куда нить сохранять
         view = self.window.new_file()
         view.set_syntax_file('Packages/memTask/' + __name__ + '.tmLanguage')
         Tree = lambda: defaultdict(Tree)
