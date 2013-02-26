@@ -15,7 +15,8 @@ WARNING! If you have some problems on other OS please add issues.
   - pull
   - goto memTask package settings, copy from default to user "file_path".
   - Change it from "\\User\\memTask.json" to "/User/memTask.json"
-  - **windows users**
+
+- **windows users**
   - just pull
 
 
