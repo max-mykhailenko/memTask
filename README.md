@@ -10,7 +10,8 @@ Tested on:
 WARNING! If you have some problems on other OS please add issues.
 
 ## Instruction
-	- **mac users**
+
+- **mac users**
   - pull
   - goto memTask package settings, copy from default to user "file_path".
   - Change it from "\\User\\memTask.json" to "/User/memTask.json"
