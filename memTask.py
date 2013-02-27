@@ -9,9 +9,6 @@ import platform
 
 class memTask(sublime_plugin.EventListener):
     def __init__(self):
-        sublime.set_timeout(self.runApp, 5000)
-
-    def runApp(self):
         if not hasattr(self, "setting") is None:
             self.setting = {}
             settings = sublime.load_settings(__name__ + '.sublime-settings')
@@ -38,15 +35,17 @@ class memTask(sublime_plugin.EventListener):
                 self.stopTimer = True
                 return
             else:
-                if self.fileName is not None:
-                    if self.today + self.dirSep + self.fileName in self.base:
-                        self.base[self.today + self.dirSep + self.fileName]["time"] = int(self.base[self.today + self.dirSep + self.fileName]["time"]) + int(5)
-                        self.WriteBaseToFile(self.base)
-                    else:
-                        self.base[self.today + self.dirSep + self.fileName] = {"time": 5}
-                    self.SetStatus('elapsedTime', 'Elapsed time: ' + str(self.SecToHM(self.base[self.today + self.dirSep + self.fileName]["time"])))
+                if self.fileName is None:
+                    self.fileName = 'temp files'
+                fp = self.today + self.dirSep + self.fileName
+                if fp in self.base:
+                    self.base[fp]["time"] = int(self.base[fp]["time"]) + int(5)
                     self.WriteBaseToFile(self.base)
-                    sublime.set_timeout(self.ElapsedTime, 5000)
+                else:
+                    self.base[fp] = {"time": 5}
+                self.SetStatus('elapsedTime', 'Elapsed time: ' + str(self.SecToHM(self.base[fp]["time"])))
+                self.WriteBaseToFile(self.base)
+                sublime.set_timeout(self.ElapsedTime, 5000)
         else:
             self.EraseStatus('elapsedTime')
 
@@ -56,7 +55,7 @@ class memTask(sublime_plugin.EventListener):
             self.fileName = view.file_name()
         if self.fileView is False or self.fileView is None:
             self.fileView = view
-        if hasattr(self, 'stopTimer') and self.stopTimer is True:
+        if self.stopTimer is True:
             self.stopTimer = False
             self.ElapsedTime()
 
@@ -66,12 +65,6 @@ class memTask(sublime_plugin.EventListener):
 
     def SetStatus(self, place, phrase):
         self.fileView.set_status(place, phrase)
-        # def setstatus():
-        #     window = sublime.active_window()
-        #     if window is not None:
-        #         view = sublime.active_window().active_view()
-        #         view.set_status(place, phrase)
-        # sublime.set_timeout(setstatus, 2000)
 
     def EraseStatus(self, place):
         for view in sublime.active_window().views():
@@ -100,6 +93,8 @@ class memTask(sublime_plugin.EventListener):
         json_data_file.write(json.dumps(data, indent=4, sort_keys=True))
         json_data_file.close()
 
+MT = memTask()
+
 
 class ShowTimeCommand(sublime_plugin.WindowCommand):
     def run(self):
@@ -112,7 +107,10 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
         def treeify(seq):
             ret = {}
             for path in seq:
-                seq[path]['pathArray'] = path.split(MT.dirSep)
+                if platform.system() == 'Windows':
+                    seq[path]['pathArray'] = path.split('\\')
+                else:
+                    seq[path]['pathArray'] = path.split('/')
                 # Не брать файлы с временных папок
                 if 'temp' not in seq[path]['pathArray'] and 'Temp' not in seq[path]['pathArray']:
                     cur = ret
@@ -149,5 +147,3 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
         edit = view.begin_edit()
         printLine(edit, tree, 0)
         view.set_name("all.time")
-
-MT = memTask()
