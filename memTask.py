@@ -9,6 +9,11 @@ import platform
 
 class memTask(sublime_plugin.EventListener):
     def __init__(self):
+        sublime.set_timeout(self.runApp, 5000)
+
+    def runApp(self):
+        global MT
+        MT = self
         if not hasattr(self, "setting") is None:
             self.setting = {}
             settings = sublime.load_settings(__name__ + '.sublime-settings')
@@ -53,7 +58,7 @@ class memTask(sublime_plugin.EventListener):
             self.fileName = view.file_name()
         if self.fileView is False or self.fileView is None:
             self.fileView = view
-        if self.stopTimer is True:
+        if hasattr(self, 'stopTimer') and self.stopTimer is True:
             self.stopTimer = False
             self.ElapsedTime()
 
@@ -96,8 +101,6 @@ class memTask(sublime_plugin.EventListener):
         json_data_file = open(sublime.packages_path() + self.setting['file_path'], "w+")
         json_data_file.write(json.dumps(data, indent=4, sort_keys=True))
         json_data_file.close()
-
-MT = memTask()
 
 
 class ShowTimeCommand(sublime_plugin.WindowCommand):
