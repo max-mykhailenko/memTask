@@ -3,7 +3,6 @@ import sublime
 import sublime_plugin
 import json
 import datetime
-from pprint import pprint
 from collections import defaultdict
 import platform
 
