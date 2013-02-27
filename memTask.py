@@ -12,8 +12,6 @@ class memTask(sublime_plugin.EventListener):
         sublime.set_timeout(self.runApp, 5000)
 
     def runApp(self):
-        global MT
-        MT = self
         if not hasattr(self, "setting") is None:
             self.setting = {}
             settings = sublime.load_settings(__name__ + '.sublime-settings')
@@ -151,3 +149,5 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
         edit = view.begin_edit()
         printLine(edit, tree, 0)
         view.set_name("all.time")
+
+MT = memTask()
