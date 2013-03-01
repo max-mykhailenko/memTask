@@ -13,6 +13,7 @@ class memTask(sublime_plugin.EventListener):
             self.setting = {}
             settings = sublime.load_settings(__name__ + '.sublime-settings')
             self.setting['idle'] = settings.get('idle')
+            self.setting['date_format'] = settings.get('date_format')
 
         if platform.system() == 'Windows':
             self.dirSep = "\\"
@@ -23,6 +24,7 @@ class memTask(sublime_plugin.EventListener):
         self.stopTimer = True
         self.fileName = False
         self.fileView = False
+        self.today = datetime.datetime.now().strftime(self.setting['date_format'])
         self.base = self.ReadBaseFromFile()
 
     def ElapsedTime(self):
@@ -33,12 +35,15 @@ class memTask(sublime_plugin.EventListener):
                 self.stopTimer = True
                 return
             else:
-                if self.fileName in self.base:
-                    self.base[self.fileName]["time"] = int(self.base[self.fileName]["time"]) + int(5)
+                if self.fileName is None:
+                    self.fileName = 'temp files'
+                fp = self.today + self.dirSep + self.fileName
+                if fp in self.base:
+                    self.base[fp]["time"] = int(self.base[fp]["time"]) + int(5)
                     self.WriteBaseToFile(self.base)
                 else:
-                    self.base[self.fileName] = {"time": 5}
-                self.SetStatus('elapsedTime', 'Elapsed time: ' + str(self.SecToHM(self.base[self.fileName]["time"])))
+                    self.base[fp] = {"time": 5}
+                self.SetStatus('elapsedTime', 'Elapsed time: ' + str(self.SecToHM(self.base[fp]["time"])))
                 self.WriteBaseToFile(self.base)
                 sublime.set_timeout(self.ElapsedTime, 5000)
         else:
@@ -60,12 +65,6 @@ class memTask(sublime_plugin.EventListener):
 
     def SetStatus(self, place, phrase):
         self.fileView.set_status(place, phrase)
-        # def setstatus():
-        #     window = sublime.active_window()
-        #     if window is not None:
-        #         view = sublime.active_window().active_view()
-        #         view.set_status(place, phrase)
-        # sublime.set_timeout(setstatus, 2000)
 
     def EraseStatus(self, place):
         for view in sublime.active_window().views():
@@ -97,21 +96,13 @@ class memTask(sublime_plugin.EventListener):
 MT = memTask()
 
 
-class TimeFileEvents(sublime_plugin.EventListener):
-    def on_close(self, view):
-        print 1
-
-
 class ShowTimeCommand(sublime_plugin.WindowCommand):
     def run(self):
-        # Может стоит файл все же сразу куда нить сохранять
         view = self.window.new_file()
         view.set_syntax_file('Packages/memTask/' + __name__ + '.tmLanguage')
         Tree = lambda: defaultdict(Tree)
         tree = Tree()
         base = MT.ReadBaseFromFile()
-
-        TimeFileEvents()
 
         def treeify(seq):
             ret = {}

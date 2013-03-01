@@ -20,4 +20,4 @@ WARNING! If you have some problems on other OS please add issues.
 ## Changelog
   - **Version 0.1**
     - you can change idle time in settings
-    - current date as root of tree (nightly branch, will be merged to master after few days of testing)
+    - current date as root of tree
