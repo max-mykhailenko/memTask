@@ -18,6 +18,8 @@ WARNING! If you have some problems on other OS please add issues.
     - ctrl+shift+p "memTask: Show spent time"
 
 ## Changelog
+  - **Version 0.1.1**
+    - folding to date by default (nigthly branch)
   - **Version 0.1**
     - you can change idle time in settings
     - current date as root of tree

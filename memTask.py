@@ -129,7 +129,6 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
             for key, value in tree.iteritems():
                 if key == 'time':
                     amount = value
-                    # view.insert(edit, view.size(), ': ' + MT.SecToHM(value))
                 else:
                     amount = 0
                     view.insert(edit, view.size(), "\n")
@@ -139,11 +138,24 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
                         i += 1
                     view.insert(edit, view.size(), key)
                     tempViewSize = view.size()
+                    if IsDate(key):
+                        MT.startFolding = view.size()
                     amount = printLine(edit, tree[key], level + 1)
                     view.insert(edit, tempViewSize, ': ' + MT.SecToHM(amount))
                     forkAmount += amount
+                    if IsDate(key):
+                        if key != MT.today:
+                            view.fold(sublime.Region(MT.startFolding+7, view.size()))
             return forkAmount or amount
+
+        def IsDate(line):
+            try:
+                datetime.datetime.strptime(line, MT.setting['date_format'])
+                return True
+            except Exception:
+                return False
 
         edit = view.begin_edit()
         printLine(edit, tree, 0)
+        view.insert(edit, view.size(), "\n")
         view.set_name("all.time")
