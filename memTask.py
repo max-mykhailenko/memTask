@@ -98,32 +98,39 @@ MT = memTask()
 
 class ShowTimeCommand(sublime_plugin.WindowCommand):
     def run(self):
-        view = self.window.new_file()
-        view.set_syntax_file('Packages/memTask/' + __name__ + '.tmLanguage')
-        Tree = lambda: defaultdict(Tree)
-        tree = Tree()
-        base = MT.ReadBaseFromFile()
+        self.ShowReportVariants()
 
-        def treeify(seq):
-            ret = {}
-            for path in seq:
-                if platform.system() == 'Windows':
-                    seq[path]['pathArray'] = path.split('\\')
-                else:
-                    seq[path]['pathArray'] = path.split('/')
-                # Не брать файлы с временных папок
-                if 'temp' not in seq[path]['pathArray'] and 'Temp' not in seq[path]['pathArray']:
-                    cur = ret
-                    for ind, node in enumerate(seq[path]['pathArray']):
-                        # Если последний элемент, то нужно взять время, а не детей
-                        if ind == len(seq[path]['pathArray']) - 1:
-                            cur = cur.setdefault(node, {'time': seq[path]['time']})
-                        else:
-                            cur = cur.setdefault(node, {})
-            return ret
+    def treeify(self, seq, removeDate):
+        ret = {}
+        for path in seq:
+            if platform.system() == 'Windows':
+                seq[path]['pathArray'] = path.split('\\')
+            else:
+                seq[path]['pathArray'] = path.split('/')
 
-        tree = treeify(base)
+            if removeDate:
+                if self.IsDate(seq[path]['pathArray'][0]):
+                    del seq[path]['pathArray'][0]
 
+            # Не брать файлы с временных папок
+            if 'temp' not in seq[path]['pathArray'] and 'Temp' not in seq[path]['pathArray']:
+                cur = ret
+                for ind, node in enumerate(seq[path]['pathArray']):
+                    # Если последний элемент, то нужно взять время, а не детей
+                    if ind == len(seq[path]['pathArray']) - 1:
+                        cur = cur.setdefault(node, {'time': seq[path]['time']})
+                    else:
+                        cur = cur.setdefault(node, {})
+        return ret
+
+    def IsDate(self, line):
+        try:
+            datetime.datetime.strptime(line, MT.setting['date_format'])
+            return True
+        except Exception:
+            return False
+
+    def ShowGroupedBy(self, type):
         def printLine(edit, tree, level):
             forkAmount = 0
             for key, value in tree.iteritems():
@@ -138,24 +145,46 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
                         i += 1
                     view.insert(edit, view.size(), key)
                     tempViewSize = view.size()
-                    if IsDate(key):
+                    if self.IsDate(key):
                         MT.startFolding = view.size()
                     amount = printLine(edit, tree[key], level + 1)
                     view.insert(edit, tempViewSize, ': ' + MT.SecToHM(amount))
                     forkAmount += amount
-                    if IsDate(key):
+                    if self.IsDate(key):
                         if key != MT.today:
                             view.fold(sublime.Region(MT.startFolding+7, view.size()))
             return forkAmount or amount
 
-        def IsDate(line):
-            try:
-                datetime.datetime.strptime(line, MT.setting['date_format'])
-                return True
-            except Exception:
-                return False
+        view = self.window.new_file()
+        view.set_syntax_file('Packages/memTask/' + __name__ + '.tmLanguage')
+        Tree = lambda: defaultdict(Tree)
+        tree = Tree()
+        base = MT.ReadBaseFromFile()
 
+        if type == 'date':
+            tree = self.treeify(base, False)
+        else:
+            tree = self.treeify(base, True)
         edit = view.begin_edit()
         printLine(edit, tree, 0)
         view.insert(edit, view.size(), "\n")
         view.set_name("all.time")
+
+    def ShowReportVariants(self):
+        self.variants = [
+            ['Group time by date'],
+            ['Group time by project']
+        ]
+
+        self.window.show_quick_panel(self.variants, self.VariantClick)
+
+    def VariantClick(self, picked):
+        if picked == -1:
+            return
+
+        if picked == 0:
+            self.ShowGroupedBy('date')
+            return
+
+        if picked == 1:
+            self.ShowGroupedBy('project')
