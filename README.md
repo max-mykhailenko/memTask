@@ -10,11 +10,12 @@ Tested on:
   - Mac OS X 10.7.5
   - Mac OS X 10.8.3
 
-WARNING! If you have some problems on other OS please add issues.
+WARNING! Reinstall plugin from package repository.
+If you have some problems on other OS please add issues.
 
 ## Usage
   - **mac and windows users**
-    - just pull
+    - install plugin from package repository
     - ctrl+alt+t (ctrl+super+t on mac) will show all time. You can save this file with specific date in some folder, add comments
     - ctrl+shift+p "memTask: Show spent time"
 
