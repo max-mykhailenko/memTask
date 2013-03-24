@@ -13,6 +13,10 @@ Tested on:
 WARNING! Reinstall plugin from package repository.
 If you have some problems on other OS please add issues.
 
+## Plans
+  - add comments to each file in tree
+  - add connector to redmine and other project management applications
+
 ## Usage
   - **mac and windows users**
     - install plugin from package repository
