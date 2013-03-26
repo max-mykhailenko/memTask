@@ -5,6 +5,7 @@ import json
 import datetime
 from collections import defaultdict
 import platform
+import re
 
 
 class memTask(sublime_plugin.EventListener):
@@ -40,11 +41,12 @@ class memTask(sublime_plugin.EventListener):
                 fp = self.today + self.dirSep + self.fileName
                 if fp in self.base:
                     self.base[fp]["time"] = int(self.base[fp]["time"]) + int(5)
-                    self.WriteBaseToFile(self.base)
                 else:
-                    self.base[fp] = {"time": 5}
+                    self.base[fp] = {
+                        "time": 5,
+                        "path_divider": self.dirSep
+                    }
                 self.SetStatus('elapsedTime', 'Elapsed time: ' + str(self.SecToHM(self.base[fp]["time"])))
-                self.WriteBaseToFile(self.base)
                 sublime.set_timeout(self.ElapsedTime, 5000)
         else:
             self.EraseStatus('elapsedTime')
@@ -62,6 +64,9 @@ class memTask(sublime_plugin.EventListener):
     def on_activated(self, view):
         self.fileName = view.file_name()
         self.fileView = view
+
+    def on_post_save(self, view):
+        self.WriteBaseToFile(self.base)
 
     def SetStatus(self, place, phrase):
         self.fileView.set_status(place, phrase)
@@ -100,17 +105,47 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
     def run(self):
         self.ShowReportVariants()
 
+    def IsDate(self, line):
+        try:
+            datetime.datetime.strptime(line, MT.setting['date_format'])
+            return True
+        except Exception:
+            return False
+
     def treeify(self, seq, removeDate):
         ret = {}
-        for path in seq:
-            if platform.system() == 'Windows':
-                seq[path]['pathArray'] = path.split('\\')
-            else:
-                seq[path]['pathArray'] = path.split('/')
 
-            if removeDate:
-                if self.IsDate(seq[path]['pathArray'][0]):
-                    del seq[path]['pathArray'][0]
+        if removeDate:
+            newSeq = {}
+            for path in seq:
+                if "\\" in path:
+                    newPath = re.sub(r'^([^\\]+)\\', '', path)
+                else:
+                    newPath = re.sub(r'^([^/]+)/', '', path)
+                print newSeq
+                if newPath in newSeq:
+                    newSeq[newPath]["time"] = int(newSeq[newPath]["time"]) + seq[path]["time"]
+                else:
+                    newSeq[newPath] = seq[path]
+            seq = newSeq
+
+        for path in seq:
+            if not hasattr(seq[path], "path_divider"):
+                if "\\" in path:
+                    seq[path]["path_divider"] = "\\"
+                else:
+                    seq[path]["path_divider"] = "/"
+
+            seq[path]['pathArray'] = path.split(seq[path]["path_divider"])
+
+            # if platform.system() == 'Windows':
+            #     seq[path]['pathArray'] = path.split('\\')
+            # else:
+            #     seq[path]['pathArray'] = path.split('/')
+
+            # if removeDate:
+            #     if self.IsDate(seq[path]['pathArray'][0]):
+            #         del seq[path]['pathArray'][0]
 
             # Не брать файлы с временных папок
             if 'temp' not in seq[path]['pathArray'] and 'Temp' not in seq[path]['pathArray']:
@@ -122,13 +157,6 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
                     else:
                         cur = cur.setdefault(node, {})
         return ret
-
-    def IsDate(self, line):
-        try:
-            datetime.datetime.strptime(line, MT.setting['date_format'])
-            return True
-        except Exception:
-            return False
 
     def ShowGroupedBy(self, type):
         def printLine(edit, tree, level):
@@ -159,12 +187,10 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
         view.set_syntax_file('Packages/memTask/' + __name__ + '.tmLanguage')
         Tree = lambda: defaultdict(Tree)
         tree = Tree()
-        base = MT.ReadBaseFromFile()
+        self.base = MT.ReadBaseFromFile()
 
-        if type == 'date':
-            tree = self.treeify(base, False)
-        else:
-            tree = self.treeify(base, True)
+        tree = self.treeify(self.base, False if type == 'date' else True)
+
         edit = view.begin_edit()
         printLine(edit, tree, 0)
         view.insert(edit, view.size(), "\n")
