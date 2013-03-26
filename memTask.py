@@ -5,6 +5,7 @@ import json
 import datetime
 from collections import defaultdict
 import platform
+import re
 
 
 class memTask(sublime_plugin.EventListener):
@@ -65,7 +66,6 @@ class memTask(sublime_plugin.EventListener):
         self.fileView = view
 
     def on_post_save(self, view):
-        print self.base
         self.WriteBaseToFile(self.base)
 
     def SetStatus(self, place, phrase):
@@ -114,6 +114,21 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
 
     def treeify(self, seq, removeDate):
         ret = {}
+
+        if removeDate:
+            newSeq = {}
+            for path in seq:
+                if "\\" in path:
+                    newPath = re.sub(r'^([^\\]+)\\', '', path)
+                else:
+                    newPath = re.sub(r'^([^/]+)/', '', path)
+                print newSeq
+                if newPath in newSeq:
+                    newSeq[newPath]["time"] = int(newSeq[newPath]["time"]) + seq[path]["time"]
+                else:
+                    newSeq[newPath] = seq[path]
+            seq = newSeq
+
         for path in seq:
             if not hasattr(seq[path], "path_divider"):
                 if "\\" in path:
@@ -128,9 +143,9 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
             # else:
             #     seq[path]['pathArray'] = path.split('/')
 
-            if removeDate:
-                if self.IsDate(seq[path]['pathArray'][0]):
-                    del seq[path]['pathArray'][0]
+            # if removeDate:
+            #     if self.IsDate(seq[path]['pathArray'][0]):
+            #         del seq[path]['pathArray'][0]
 
             # Не брать файлы с временных папок
             if 'temp' not in seq[path]['pathArray'] and 'Temp' not in seq[path]['pathArray']:
