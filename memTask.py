@@ -124,7 +124,6 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
                     newPath = re.sub(r'^([^\\]+)\\', '', path)
                 else:
                     newPath = re.sub(r'^([^/]+)/', '', path)
-                print newSeq
                 if newPath in newSeq:
                     newSeq[newPath]["time"] = int(newSeq[newPath]["time"]) + seq[path]["time"]
                 else:
