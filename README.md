@@ -24,6 +24,10 @@ If you have some problems on other OS please add issues.
     - ctrl+shift+p "memTask: Show spent time"
 
 ## Changelog
+  - **Version 0.1.2**
+    - add date sorting
+    - fixed incorect time in projects views
+    - fixed using plugin on mac and windows in the same time
   - **Version 0.1.1**
     - folding by date or folder
   - **Version 0.1**
