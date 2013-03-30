@@ -6,6 +6,9 @@ import datetime
 from collections import defaultdict
 import platform
 import re
+from pprint import pprint
+from ordereddict import OrderedDict
+# from collections import OrderedDict
 
 
 class memTask(sublime_plugin.EventListener):
@@ -114,7 +117,6 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
 
     def treeify(self, seq, removeDate):
         ret = {}
-
         if removeDate:
             newSeq = {}
             for path in seq:
@@ -190,6 +192,10 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
         self.base = MT.ReadBaseFromFile()
 
         tree = self.treeify(self.base, False if type == 'date' else True)
+
+        # tree = OrderedDict(sorted(tree.items(), key=lambda k: datetime.datetime.strptime(k[0][:10], MT.setting['date_format'])))
+        if type == 'date':
+            tree = OrderedDict(sorted(tree.items(), key=lambda k: k[0][:10].split('.')[::-1], reverse=True))
 
         edit = view.begin_edit()
         printLine(edit, tree, 0)
