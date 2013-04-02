@@ -2,5 +2,10 @@
 	{
 		"keys": ["ctrl+alt+t"],
 		"command": "show_time"
+	},
+	{
+		"keys": ["enter"],
+		"command": "add_comment",
+		"context": [{"key": "selector","operator": "equal", "operand": "all.time"}]
 	}
 ]

@@ -139,15 +139,6 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
 
             seq[path]['pathArray'] = path.split(seq[path]["path_divider"])
 
-            # if platform.system() == 'Windows':
-            #     seq[path]['pathArray'] = path.split('\\')
-            # else:
-            #     seq[path]['pathArray'] = path.split('/')
-
-            # if removeDate:
-            #     if self.IsDate(seq[path]['pathArray'][0]):
-            #         del seq[path]['pathArray'][0]
-
             # Не брать файлы с временных папок
             if 'temp' not in seq[path]['pathArray'] and 'Temp' not in seq[path]['pathArray']:
                 cur = ret
@@ -219,3 +210,8 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
 
         if picked == 1:
             self.ShowGroupedBy('project')
+
+
+class AddCommentCommand(sublime_plugin.WindowCommand):
+    def run(self):
+        print 'I run'
