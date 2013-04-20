@@ -30,6 +30,15 @@ class memTask(sublime_plugin.EventListener):
         self.fileView = False
         self.today = datetime.datetime.now().strftime(self.setting['date_format'])
         self.base = self.ReadBaseFromFile()
+        self.TryReID()
+
+    def TryReID(self):
+        if 'id' not in self.base.itervalues().next():
+            i = 0
+            for path in self.base:
+                self.base[path]['id'] = i
+                i += 1
+            self.WriteBaseToFile(self.base)
 
     def ElapsedTime(self):
         if self.stopTimer is False:
@@ -47,6 +56,7 @@ class memTask(sublime_plugin.EventListener):
                 else:
                     self.base[fp] = {
                         "time": 5,
+                        "id": len(self.base),
                         "path_divider": self.dirSep
                     }
                 self.SetStatus('elapsedTime', 'Elapsed time: ' + str(self.SecToHM(self.base[fp]["time"])))
@@ -145,7 +155,7 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
                 for ind, node in enumerate(seq[path]['pathArray']):
                     # Если последний элемент, то нужно взять время, а не детей
                     if ind == len(seq[path]['pathArray']) - 1:
-                        cur = cur.setdefault(node, {'time': seq[path]['time']})
+                        cur = cur.setdefault(node, {'time': seq[path]['time'], 'id': seq[path]['id']})
                     else:
                         cur = cur.setdefault(node, {})
         return ret
@@ -156,6 +166,9 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
             for key, value in tree.iteritems():
                 if key == 'time':
                     amount = value
+                    view.insert(edit, view.size(), ' [+]')
+                elif key == 'id':
+                    view.insert(edit, view.size(), ' #' + str(value) + '#')
                 else:
                     amount = 0
                     view.insert(edit, view.size(), "\n")
@@ -167,12 +180,13 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
                     tempViewSize = view.size()
                     if self.IsDate(key):
                         MT.startFolding = view.size()
+                    # вот тут скорее всего дописать условие отправку ключа
                     amount = printLine(edit, tree[key], level + 1)
                     view.insert(edit, tempViewSize, ': ' + MT.SecToHM(amount))
                     forkAmount += amount
                     if self.IsDate(key):
                         if key != MT.today:
-                            view.fold(sublime.Region(MT.startFolding+7, view.size()))
+                            view.fold(sublime.Region(MT.startFolding + 7, view.size()))
             return forkAmount or amount
 
         view = self.window.new_file()
@@ -212,6 +226,8 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
             self.ShowGroupedBy('project')
 
 
-class AddCommentCommand(sublime_plugin.WindowCommand):
-    def run(self):
-        print 'I run'
+class AddCommentCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        line = self.view.line(self.view.sel()[0])
+        self.view.insert(edit, self.view.sel()[0].b, '\n')
+        print line

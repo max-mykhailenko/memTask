@@ -6,6 +6,8 @@
 	{
 		"keys": ["enter"],
 		"command": "add_comment",
-		"context": [{"key": "selector","operator": "equal", "operand": "all.time"}]
+		"context": [
+			{"key": "selector","operator": "equal", "operand": "all.time"}
+		]
 	}
 ]
