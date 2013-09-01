@@ -1,5 +1,5 @@
 {
-	// Stop counting time when Time in s
+	// Stop counting time (in seconds)
 	// Default time is 5 min = 300
 	"idle" : 300,
 	"date_format" : "%d.%m.%Y"

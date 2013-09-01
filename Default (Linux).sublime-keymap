@@ -1,6 +1,10 @@
 [
-	{
-		"keys": ["ctrl+super+t"],
-		"command": "show_time"
-	}
+  {
+    "keys": ["ctrl+super+t"],
+    "command": "show_time"
+  },
+  {
+    "keys": ["ctrl+super+i"],
+    "command": "insert_time"
+  }
 ]

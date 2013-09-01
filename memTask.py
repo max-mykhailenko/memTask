@@ -7,17 +7,20 @@ from collections import defaultdict
 import platform
 import re
 from pprint import pprint
-from ordereddict import OrderedDict
-# from collections import OrderedDict
+from math import floor
+
+try:
+    # Python 3 have OrderedDict
+    from collections import OrderedDict
+except ImportError:
+    # Python 2 didn't have
+    from ordereddict import OrderedDict
 
 
 class memTask(sublime_plugin.EventListener):
     def __init__(self):
         if not hasattr(self, "setting") is None:
             self.setting = {}
-            settings = sublime.load_settings(__name__ + '.sublime-settings')
-            self.setting['idle'] = settings.get('idle')
-            self.setting['date_format'] = settings.get('date_format')
 
         if platform.system() == 'Windows':
             self.dirSep = "\\"
@@ -28,17 +31,26 @@ class memTask(sublime_plugin.EventListener):
         self.stopTimer = True
         self.fileName = False
         self.fileView = False
+        self.totalTime = {
+            'fromLastCommit': 0
+        }
+        self.finish = False
+
+        if not sublime.version() or int(sublime.version()) > 3000:
+            # Sublime Text 3
+            timeout = 1000
+        else:
+            timeout = 0
+
+        sublime.set_timeout(lambda: self.finish_init(), timeout)
+
+    def finish_init(self):
+        settings = sublime.load_settings('memTask.sublime-settings')
+        self.setting['idle'] = settings.get('idle')
+        self.setting['date_format'] = settings.get('date_format')
         self.today = datetime.datetime.now().strftime(self.setting['date_format'])
         self.base = self.ReadBaseFromFile()
-        self.TryReID()
-
-    def TryReID(self):
-        if 'id' not in self.base.itervalues().next():
-            i = 0
-            for path in self.base:
-                self.base[path]['id'] = i
-                i += 1
-            self.WriteBaseToFile(self.base)
+        self.finish = True
 
     def ElapsedTime(self):
         if self.stopTimer is False:
@@ -56,23 +68,25 @@ class memTask(sublime_plugin.EventListener):
                 else:
                     self.base[fp] = {
                         "time": 5,
-                        "id": len(self.base),
                         "path_divider": self.dirSep
                     }
                 self.SetStatus('elapsedTime', 'Elapsed time: ' + str(self.SecToHM(self.base[fp]["time"])))
-                sublime.set_timeout(self.ElapsedTime, 5000)
+
+                TT['fromLastCommit'] += 5
+                sublime.set_timeout(lambda: self.ElapsedTime(), 5000)
         else:
             self.EraseStatus('elapsedTime')
 
     def on_modified(self, view):
-        self.lastChangeTime = datetime.datetime.now()
-        if self.fileName is False or self.fileName is None:
-            self.fileName = view.file_name()
-        if self.fileView is False or self.fileView is None:
-            self.fileView = view
-        if self.stopTimer is True:
-            self.stopTimer = False
-            self.ElapsedTime()
+        if self.finish:
+            self.lastChangeTime = datetime.datetime.now()
+            if self.fileName is False or self.fileName is None:
+                self.fileName = view.file_name()
+            if self.fileView is False or self.fileView is None:
+                self.fileView = view
+            if self.stopTimer is True:
+                self.stopTimer = False
+                self.ElapsedTime()
 
     def on_activated(self, view):
         self.fileName = view.file_name()
@@ -89,10 +103,16 @@ class memTask(sublime_plugin.EventListener):
             view.erase_status(place)
 
     def SecToHM(self, seconds):
-        hours = seconds / 3600
+        hours = floor(seconds / 3600)
         seconds -= 3600 * hours
-        minutes = seconds / 60
+        minutes = floor(seconds / 60)
         return "%02d:%02d" % (hours, minutes)
+
+    def SecToHMfull(self, seconds):
+        hours = floor(seconds / 3600)
+        seconds -= 3600 * hours
+        minutes = floor(seconds / 60)
+        return "%sh %sm" % (hours, minutes)
 
     def ReadBaseFromFile(self):
         try:
@@ -103,7 +123,7 @@ class memTask(sublime_plugin.EventListener):
         except IOError as e:
             self.WriteBaseToFile({})
             data = {}
-            print 'memTask: Database file created.' + str(e)
+            print('memTask: Database file created.' + str(e))
             return data
 
     def WriteBaseToFile(self, data):
@@ -111,19 +131,15 @@ class memTask(sublime_plugin.EventListener):
         json_data_file.write(json.dumps(data, indent=4, sort_keys=True))
         json_data_file.close()
 
+TT = {
+    'fromLastCommit': 0
+}
 MT = memTask()
 
 
 class ShowTimeCommand(sublime_plugin.WindowCommand):
     def run(self):
         self.ShowReportVariants()
-
-    def IsDate(self, line):
-        try:
-            datetime.datetime.strptime(line, MT.setting['date_format'])
-            return True
-        except Exception:
-            return False
 
     def treeify(self, seq, removeDate):
         ret = {}
@@ -155,55 +171,22 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
                 for ind, node in enumerate(seq[path]['pathArray']):
                     # Если последний элемент, то нужно взять время, а не детей
                     if ind == len(seq[path]['pathArray']) - 1:
-                        cur = cur.setdefault(node, {'time': seq[path]['time'], 'id': seq[path]['id']})
+                        cur = cur.setdefault(node, {'time': seq[path]['time']})
                     else:
                         cur = cur.setdefault(node, {})
         return ret
 
     def ShowGroupedBy(self, type):
-        def printLine(edit, tree, level):
-            forkAmount = 0
-            for key, value in tree.iteritems():
-                if key == 'time':
-                    amount = value
-                    view.insert(edit, view.size(), ' [+]')
-                elif key == 'id':
-                    view.insert(edit, view.size(), ' #' + str(value) + '#')
-                else:
-                    amount = 0
-                    view.insert(edit, view.size(), "\n")
-                    i = 0
-                    while i < level:
-                        view.insert(edit, view.size(), u"  ")
-                        i += 1
-                    view.insert(edit, view.size(), key)
-                    tempViewSize = view.size()
-                    if self.IsDate(key):
-                        MT.startFolding = view.size()
-                    # вот тут скорее всего дописать условие отправку ключа
-                    amount = printLine(edit, tree[key], level + 1)
-                    view.insert(edit, tempViewSize, ': ' + MT.SecToHM(amount))
-                    forkAmount += amount
-                    if self.IsDate(key):
-                        if key != MT.today:
-                            view.fold(sublime.Region(MT.startFolding + 7, view.size()))
-            return forkAmount or amount
-
         view = self.window.new_file()
-        view.set_syntax_file('Packages/memTask/' + __name__ + '.tmLanguage')
+        view.set_syntax_file('Packages/memTask/memTask.tmLanguage')
         Tree = lambda: defaultdict(Tree)
         tree = Tree()
         self.base = MT.ReadBaseFromFile()
 
         tree = self.treeify(self.base, False if type == 'date' else True)
 
-        # tree = OrderedDict(sorted(tree.items(), key=lambda k: datetime.datetime.strptime(k[0][:10], MT.setting['date_format'])))
-        if type == 'date':
-            tree = OrderedDict(sorted(tree.items(), key=lambda k: k[0][:10].split('.')[::-1], reverse=True))
+        view.run_command("update_mem_task_view", {'tree': tree, 'type': type})
 
-        edit = view.begin_edit()
-        printLine(edit, tree, 0)
-        view.insert(edit, view.size(), "\n")
         view.set_name("all.time")
 
     def ShowReportVariants(self):
@@ -226,8 +209,52 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
             self.ShowGroupedBy('project')
 
 
-class AddCommentCommand(sublime_plugin.TextCommand):
+class UpdateMemTaskViewCommand(sublime_plugin.TextCommand):
+    def run(self, edit, tree, type):
+
+        # tree = OrderedDict(sorted(tree.items(), key=lambda k: datetime.datetime.strptime(k[0][:10], MT.setting['date_format'])))
+        if type == 'date':
+            tree = OrderedDict(sorted(tree.items(), key=lambda k: k[0][:10].split('.')[::-1], reverse=True))
+
+        self.view = self.view.window().active_view()
+        self.printLine(edit, tree, 0)
+        self.view.insert(edit, self.view.size(), "\n")
+
+    def IsDate(self, line):
+        try:
+            datetime.datetime.strptime(line, MT.setting['date_format'])
+            return True
+        except Exception:
+            return False
+
+    def printLine(self, edit, tree, level):
+        forkAmount = 0
+        for key, value in tree.items():
+            if key == 'time':
+                amount = value
+            else:
+                amount = 0
+                self.view.insert(edit, self.view.size(), "\n")
+                i = 0
+                while i < level:
+                    self.view.insert(edit, self.view.size(), u"  ")
+                    i += 1
+                self.view.insert(edit, self.view.size(), key)
+                tempViewSize = self.view.size()
+                if self.IsDate(key):
+                    MT.startFolding = self.view.size()
+                amount = self.printLine(edit, tree[key], level + 1)
+                self.view.insert(edit, tempViewSize, ': ' + MT.SecToHM(amount))
+                forkAmount += amount
+                if self.IsDate(key):
+                    if key != MT.today:
+                        self.view.fold(sublime.Region(MT.startFolding+7, self.view.size()))
+        return forkAmount or amount
+
+
+class InsertTimeCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        line = self.view.line(self.view.sel()[0])
-        self.view.insert(edit, self.view.sel()[0].b, '\n')
-        print line
+        self.view = self.view.window().active_view()
+        pos = self.view.sel()[0]
+        self.view.insert(edit, pos.begin(), '#time ' + MT.SecToHMfull(TT['fromLastCommit']))
+        TT['fromLastCommit'] = 0

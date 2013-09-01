@@ -1,13 +1,10 @@
 [
-	{
-		"keys": ["ctrl+alt+t"],
-		"command": "show_time"
-	},
-	{
-		"keys": ["enter"],
-		"command": "add_comment",
-		"context": [
-			{"key": "selector","operator": "equal", "operand": "all.time"}
-		]
-	}
+  {
+    "keys": ["ctrl+alt+t"],
+    "command": "show_time"
+  },
+  {
+    "keys": ["ctrl+alt+i"],
+    "command": "insert_time"
+  }
 ]
