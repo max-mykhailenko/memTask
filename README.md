@@ -4,6 +4,7 @@ memTask
 memTask will remember all time which you spent in Sublime Text 2 and Sublime Text 3. See all features in "Usage" and "Changelog" sections
 
 ![interface](https://dl.dropbox.com/u/3478999/different/memTask.PNG "interface")
+![interface](https://dl.dropbox.com/u/3478999/different/memTask.PNG "interface")
 
 Tested on:
   - Windows 8
