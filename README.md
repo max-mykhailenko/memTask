@@ -3,9 +3,10 @@ memTask
 
 memTask will remember all time which you spent in Sublime Text 2 and Sublime Text 3. See all features in "Usage" and "Changelog" sections
 
-![interface](https://dl.dropbox.com/u/3478999/different/memTask.PNG "interface")
-
 Easy commit time to JIRA
+
+
+![interface](https://dl.dropbox.com/u/3478999/different/memTask.PNG "interface")
 ![commit](https://dl.dropbox.com/u/3478999/different/memtask-time-in-commit.png "commit")
 
 Tested on:
