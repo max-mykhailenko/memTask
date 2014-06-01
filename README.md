@@ -6,13 +6,17 @@ memTask will remember all time which you spent in Sublime Text 2 and Sublime Tex
 Easy commit time to JIRA
 
 
-![interface](https://dl.dropbox.com/u/3478999/different/memTask.PNG "interface") 
-![commit](https://dl.dropbox.com/u/3478999/different/memtask-time-in-commit.png "commit")
+![interface](https://raw.github.com/max-mykhailenko/memtask/gh-pages/img/statistics.gif "interface") 
+![commit](https://raw.github.com/max-mykhailenko/memtask/gh-pages/img/timer.gif "commit")
 
 Tested on:
+  - Windows 7
   - Windows 8
   - Mac OS X 10.7.5
   - Mac OS X 10.8.3
+  - Max OS X 10.9.3
+  - Ubuntu
+  - Debian
 
 WARNING! Reinstall plugin from package repository.
 If you have some problems on other OS please add issues.
@@ -20,6 +24,9 @@ If you have some problems on other OS please add issues.
 ## Plans
   - grouping by month (week?)
   - daily sending email with statistic
+  - ignore folder list
+  - clean statistic button
+  - additional hotkeys for jira smart commits
 
 ## Usage
   - **mac, windows and linux users**
