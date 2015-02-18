@@ -230,6 +230,7 @@ class UpdateMemTaskViewCommand(sublime_plugin.TextCommand):
 
     def printLine(self, edit, tree, level):
         forkAmount = 0
+        amount = 0
         for key, value in tree.items():
             if key == 'time':
                 amount = value
