@@ -92,7 +92,7 @@ class memTask(sublime_plugin.EventListener):
         self.fileName = view.file_name()
         self.fileView = view
 
-    def on_post_save(self, view):
+    def on_post_save_async(self, view):
         if self and self.base:
             self.WriteBaseToFile(self.base)
 
