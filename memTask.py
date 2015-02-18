@@ -38,7 +38,7 @@ class memTask(sublime_plugin.EventListener):
 
         if not sublime.version() or int(sublime.version()) > 3000:
             # Sublime Text 3
-            timeout = 1000
+            timeout = 5000
         else:
             timeout = 0
 
