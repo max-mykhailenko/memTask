@@ -5,8 +5,7 @@ memTask will remember all time which you spent in Sublime Text 2 and Sublime Tex
 
 Easy commit time to JIRA
 
-
-![interface](https://raw.github.com/max-mykhailenko/memtask/gh-pages/img/statistics.gif "interface") 
+![interface](https://github.com/max-mykhailenko/memTask/raw/gh-pages/img/statistics.gif "interface")
 ![commit](https://raw.github.com/max-mykhailenko/memtask/gh-pages/img/timer.gif "commit")
 
 Tested on:
