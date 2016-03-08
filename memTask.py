@@ -70,7 +70,6 @@ class memTask(sublime_plugin.WindowCommand):
                         'path_divider': self.dirSep
                     }
 
-                self.SetStatus('elapsedTime', 'Elapsed time: ' + str(self.SecToHM(self.base[fp]['time'])))
                 TT['fromLastCommit'] += 5
                 try:
                     with open(self.dirSep.join([sublime.active_window().folders()[0], '.git', 'HEAD']) , "r") as currentBranch:
@@ -79,6 +78,7 @@ class memTask(sublime_plugin.WindowCommand):
                 except IOError as e:
                     print('No git :(')
 
+                self.SetStatus('elapsedTime', 'Elapsed time: ' + str(self.SecToHM(self.base[fp]['time'])))
                 sublime.set_timeout(lambda: self.ElapsedTime(), 5000)
         else:
             self.EraseStatus('elapsedTime')
