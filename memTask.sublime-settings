@@ -2,5 +2,6 @@
 	// Stop counting time (in seconds)
 	// Default time is 5 min = 300
 	"idle" : 300,
+  "branch_check_interval": 300,
 	"date_format" : "%d.%m.%Y"
 }

@@ -8,6 +8,7 @@ import platform
 import re
 from pprint import pprint
 from math import floor
+import time
 
 try:
     # Python 3 have OrderedDict
@@ -22,7 +23,11 @@ TT = {
 }
 
 global MT
+global countingInProgress
+global timeoutInProgress
 MT = None
+countingInProgress = False
+timeoutInProgress = False
 
 class memTask(sublime_plugin.WindowCommand):
     def __init__(self, view):
@@ -39,7 +44,8 @@ class memTask(sublime_plugin.WindowCommand):
         self.setting = {
             'db_path': self.dirSep.join(dbPath),
             'idle': pluginSettings.get('idle'),
-            'date_format': pluginSettings.get('date_format')
+            'date_format': pluginSettings.get('date_format'),
+            'branch_check_interval': pluginSettings.get('branch_check_interval')
         }
 
         self.stopTimer = True
@@ -47,10 +53,23 @@ class memTask(sublime_plugin.WindowCommand):
         self.fileView = None
         self.base = self.ReadBaseFromFile()
         self.finish = True
+        self.branchCheckTime = datetime.datetime.fromtimestamp(0)
+        self.currentBranch = None
 
     def ElapsedTime(self):
+        print('tick: ' + str(time.time()))
+        global countingInProgress
         if self.stopTimer is False:
+            countingInProgress = True
             timeSec = (datetime.datetime.now() - self.lastChangeTime).seconds
+            if (self.lastChangeTime - self.branchCheckTime).seconds > self.setting['branch_check_interval']:
+                self.branchCheckTime = self.lastChangeTime
+                try:
+                    with open(self.dirSep.join([sublime.active_window().folders()[0], '.git', 'HEAD']) , "r") as headFile:
+                        self.currentBranch = headFile.read().split('/')[-1].replace('\n', '')
+                        headFile.close()
+                except IOError as e:
+                    print('No git :(')
 
             if timeSec > self.setting['idle']:
                 self.stopTimer = True
@@ -64,19 +83,16 @@ class memTask(sublime_plugin.WindowCommand):
 
                 if fp in self.base:
                     self.base[fp]['time'] = int(self.base[fp]['time']) + int(5)
+                    self.base[fp]['branch'] = self.currentBranch
                 else:
                     self.base[fp] = {
                         'time': 5,
+                        'branch': self.currentBranch,
                         'path_divider': self.dirSep
                     }
 
                 TT['fromLastCommit'] += 5
-                try:
-                    with open(self.dirSep.join([sublime.active_window().folders()[0], '.git', 'HEAD']) , "r") as currentBranch:
-                        print(currentBranch.read())
-                        currentBranch.close()
-                except IOError as e:
-                    print('No git :(')
+                
 
                 self.SetStatus('elapsedTime', 'Elapsed time: ' + str(self.SecToHM(self.base[fp]['time'])))
                 sublime.set_timeout(lambda: self.ElapsedTime(), 5000)
@@ -239,7 +255,12 @@ class InsertTimeCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         self.view = self.view.window().active_view()
         pos = self.view.sel()[0]
-        self.view.insert(edit, pos.begin(), '#time ' + MT.SecToHMfull(TT['fromLastCommit']))
+        branchName = ''
+        if MT.currentBranch is not None:
+            splittedName = MT.currentBranch.split('-')
+            if splittedName[0] and splittedName[1]:
+                branchName = splittedName[0] + '-' + splittedName[1] + ' '
+        self.view.insert(edit, pos.begin(), branchName + '#time ' + MT.SecToHMfull(TT['fromLastCommit']))
         TT['fromLastCommit'] = 0
 
 
@@ -250,22 +271,32 @@ class memTaskEventHandler(sublime_plugin.EventListener):
 
     def on_modified(self, view):
         global MT
+        global timeoutInProgress
         wasInit = False
         if MT is None:
             wasInit = True
             MT = memTask(view)
-        else:
-            print('memTask already loaded')
+
         if MT.fileName is None:
             MT.fileName = view.file_name()
         if MT.fileView is None:
             MT.fileView = view
+
+        MT.lastChangeTime = datetime.datetime.now()
+
         if MT.stopTimer is True:
             MT.stopTimer = False
-        MT.lastChangeTime = datetime.datetime.now()
-        if wasInit:
-            MT.ElapsedTime()
+            if wasInit:
+                if timeoutInProgress is False:
+                    timeoutInProgress = True
+                    sublime.set_timeout(lambda: self.checkCounterAndRun(), 5000)
+            else:
+                MT.ElapsedTime()
 
+    def checkCounterAndRun(self):
+        global countingInProgress
+        if countingInProgress is False:
+            MT.ElapsedTime()
 
     def on_activated(self, view):
         global MT
