@@ -24,7 +24,7 @@ TT = {
 global MT
 MT = None
 
-class memTask:
+class memTask(sublime_plugin.WindowCommand):
     def __init__(self, view):
         global MT
 
@@ -63,15 +63,22 @@ class memTask:
                 fp = today + self.dirSep + self.fileName
 
                 if fp in self.base:
-                    self.base[fp]["time"] = int(self.base[fp]["time"]) + int(5)
+                    self.base[fp]['time'] = int(self.base[fp]['time']) + int(5)
                 else:
                     self.base[fp] = {
-                        "time": 5,
-                        "path_divider": self.dirSep
+                        'time': 5,
+                        'path_divider': self.dirSep
                     }
-                self.SetStatus('elapsedTime', 'Elapsed time: ' + str(self.SecToHM(self.base[fp]["time"])))
 
+                self.SetStatus('elapsedTime', 'Elapsed time: ' + str(self.SecToHM(self.base[fp]['time'])))
                 TT['fromLastCommit'] += 5
+                try:
+                    with open(self.dirSep.join([sublime.active_window().folders()[0], '.git', 'HEAD']) , "r") as currentBranch:
+                        print(currentBranch.read())
+                        currentBranch.close()
+                except IOError as e:
+                    print('No git :(')
+
                 sublime.set_timeout(lambda: self.ElapsedTime(), 5000)
         else:
             self.EraseStatus('elapsedTime')
@@ -187,8 +194,6 @@ class ShowTimeCommand(sublime_plugin.WindowCommand):
 
 class UpdateMemTaskViewCommand(sublime_plugin.TextCommand):
     def run(self, edit, tree, type):
-
-        # tree = OrderedDict(sorted(tree.items(), key=lambda k: datetime.datetime.strptime(k[0][:10], MT.setting['date_format'])))
         if type == 'date':
             tree = OrderedDict(sorted(tree.items(), key=lambda k: k[0][:10].split('.')[::-1], reverse=True))
 
@@ -249,6 +254,8 @@ class memTaskEventHandler(sublime_plugin.EventListener):
         if MT is None:
             wasInit = True
             MT = memTask(view)
+        else:
+            print('memTask already loaded')
         if MT.fileName is None:
             MT.fileName = view.file_name()
         if MT.fileView is None:
