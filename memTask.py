@@ -17,38 +17,34 @@ except ImportError:
     from ordereddict import OrderedDict
 
 
-class memTask(sublime_plugin.EventListener):
-    def __init__(self):
-        if not hasattr(self, "setting") is None:
-            self.setting = {}
+TT = {
+    'fromLastCommit': 0
+}
+
+global MT
+MT = None
+
+class memTask:
+    def __init__(self, view):
+        global MT
+
+        dbPath = [sublime.packages_path(), 'User', 'memTask.json']
+        pluginSettings = sublime.load_settings('memTask.sublime-settings')
 
         if platform.system() == 'Windows':
-            self.dirSep = "\\"
+            self.dirSep = '\\'
         else:
             self.dirSep = '/'
 
-        self.setting['file_path'] = self.dirSep + "User" + self.dirSep + "memTask.json"
-        self.stopTimer = True
-        self.fileName = False
-        self.fileView = False
-        self.totalTime = {
-            'fromLastCommit': 0
+        self.setting = {
+            'db_path': self.dirSep.join(dbPath),
+            'idle': pluginSettings.get('idle'),
+            'date_format': pluginSettings.get('date_format')
         }
-        self.finish = False
 
-        if not sublime.version() or int(sublime.version()) > 3000:
-            # Sublime Text 3
-            timeout = 5000
-        else:
-            timeout = 0
-
-        sublime.set_timeout(lambda: self.finish_init(), timeout)
-
-    def finish_init(self):
-        settings = sublime.load_settings('memTask.sublime-settings')
-        self.setting['idle'] = settings.get('idle')
-        self.setting['date_format'] = settings.get('date_format')
-        self.today = datetime.datetime.now().strftime(self.setting['date_format'])
+        self.stopTimer = True
+        self.fileName = None
+        self.fileView = None
         self.base = self.ReadBaseFromFile()
         self.finish = True
 
@@ -62,7 +58,10 @@ class memTask(sublime_plugin.EventListener):
             else:
                 if self.fileName is None:
                     self.fileName = 'temp files'
-                fp = self.today + self.dirSep + self.fileName
+
+                today = datetime.datetime.now().strftime(self.setting['date_format'])
+                fp = today + self.dirSep + self.fileName
+
                 if fp in self.base:
                     self.base[fp]["time"] = int(self.base[fp]["time"]) + int(5)
                 else:
@@ -76,25 +75,6 @@ class memTask(sublime_plugin.EventListener):
                 sublime.set_timeout(lambda: self.ElapsedTime(), 5000)
         else:
             self.EraseStatus('elapsedTime')
-
-    def on_modified(self, view):
-        if self.finish:
-            self.lastChangeTime = datetime.datetime.now()
-            if self.fileName is False or self.fileName is None:
-                self.fileName = view.file_name()
-            if self.fileView is False or self.fileView is None:
-                self.fileView = view
-            if self.stopTimer is True:
-                self.stopTimer = False
-                self.ElapsedTime()
-
-    def on_activated(self, view):
-        self.fileName = view.file_name()
-        self.fileView = view
-
-    def on_post_save_async(self, view):
-        if self.finish and self and self.base:
-            self.WriteBaseToFile(self.base)
 
     def SetStatus(self, place, phrase):
         self.fileView.set_status(place, phrase)
@@ -117,7 +97,7 @@ class memTask(sublime_plugin.EventListener):
 
     def ReadBaseFromFile(self):
         try:
-            with open(sublime.packages_path() + self.setting['file_path'], "r") as json_data:
+            with open(self.setting['db_path'], "r") as json_data:
                 data = json.load(json_data)
                 json_data.close()
                 return data
@@ -128,14 +108,9 @@ class memTask(sublime_plugin.EventListener):
             return data
 
     def WriteBaseToFile(self, data):
-        json_data_file = open(sublime.packages_path() + self.setting['file_path'], "w+")
+        json_data_file = open(self.setting['db_path'], "w+")
         json_data_file.write(json.dumps(data, indent=4, sort_keys=True))
         json_data_file.close()
-
-TT = {
-    'fromLastCommit': 0
-}
-MT = memTask()
 
 
 class ShowTimeCommand(sublime_plugin.WindowCommand):
@@ -249,7 +224,8 @@ class UpdateMemTaskViewCommand(sublime_plugin.TextCommand):
                 self.view.insert(edit, tempViewSize, ': ' + MT.SecToHM(amount))
                 forkAmount += amount
                 if self.IsDate(key):
-                    if key != MT.today:
+                    today = datetime.datetime.now().strftime(MT.setting['date_format'])
+                    if key != today:
                         self.view.fold(sublime.Region(MT.startFolding+7, self.view.size()))
         return forkAmount or amount
 
@@ -260,3 +236,37 @@ class InsertTimeCommand(sublime_plugin.TextCommand):
         pos = self.view.sel()[0]
         self.view.insert(edit, pos.begin(), '#time ' + MT.SecToHMfull(TT['fromLastCommit']))
         TT['fromLastCommit'] = 0
+
+
+class memTaskEventHandler(sublime_plugin.EventListener):
+    def __init__(self):
+        global MT
+        MT = None
+
+    def on_modified(self, view):
+        global MT
+        wasInit = False
+        if MT is None:
+            wasInit = True
+            MT = memTask(view)
+        if MT.fileName is None:
+            MT.fileName = view.file_name()
+        if MT.fileView is None:
+            MT.fileView = view
+        if MT.stopTimer is True:
+            MT.stopTimer = False
+        MT.lastChangeTime = datetime.datetime.now()
+        if wasInit:
+            MT.ElapsedTime()
+
+
+    def on_activated(self, view):
+        global MT
+        if MT is not None:
+            MT.fileName = view.file_name()
+            MT.fileView = view
+
+    def on_post_save_async(self, view):
+        global MT
+        if MT and MT.base:
+            MT.WriteBaseToFile(MT.base)
