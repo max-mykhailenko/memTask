@@ -57,11 +57,13 @@ class memTask(sublime_plugin.WindowCommand):
         self.currentBranch = None
 
     def ElapsedTime(self):
-        print('tick: ' + str(time.time()))
+        # print('tick: ' + str(time.time()))
         global countingInProgress
+
         if self.stopTimer is False:
             countingInProgress = True
             timeSec = (datetime.datetime.now() - self.lastChangeTime).seconds
+
             if (self.lastChangeTime - self.branchCheckTime).seconds > self.setting['branch_check_interval']:
                 self.branchCheckTime = self.lastChangeTime
                 try:
@@ -92,8 +94,6 @@ class memTask(sublime_plugin.WindowCommand):
                     }
 
                 TT['fromLastCommit'] += 5
-                
-
                 self.SetStatus('elapsedTime', 'Elapsed time: ' + str(self.SecToHM(self.base[fp]['time'])))
                 sublime.set_timeout(lambda: self.ElapsedTime(), 5000)
         else:
@@ -258,7 +258,7 @@ class InsertTimeCommand(sublime_plugin.TextCommand):
         branchName = ''
         if MT.currentBranch is not None:
             splittedName = MT.currentBranch.split('-')
-            if splittedName[0] and splittedName[1]:
+            if len(splittedName) > 2:
                 branchName = splittedName[0] + '-' + splittedName[1] + ' '
         self.view.insert(edit, pos.begin(), branchName + '#time ' + MT.SecToHMfull(TT['fromLastCommit']))
         TT['fromLastCommit'] = 0
