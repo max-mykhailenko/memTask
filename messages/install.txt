@@ -1,0 +1,9 @@
+memTask will remember all time which you spent in
+Sublime Text 2 and Sublime Text 3.
+
+USAGE
+- Please, restart Sublime Text
+- work few minutes in some file
+- `ctrl+shift+p` (`cmd+shift+p` on OSX) "memTask: Show spent time"
+  You can save this file with specific date in some folder, add comments
+- `ctrl+alt+i` (`ctrl+cmd+i` on OSX) will show time between two points.

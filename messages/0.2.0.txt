@@ -1,0 +1,15 @@
+A new feature allows you to record the time between the two points.
+The countdown begins during the launch of the plugin.
+
+Click in any document `ctrl+shift+i` (`ctrl+cmd+i` on OSX)
+to see how much time has passed
+and start a new countdown.
+
+Previous versions history
+* Sublime text 3 support
+* add date sorting
+* fixed incorect time in projects views
+* fixed using plugin on OSX and windows in the same time
+* folding by date or folder
+* you can change idle time in settings
+* current date as root of tree
