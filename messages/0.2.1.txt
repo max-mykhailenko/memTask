@@ -1,0 +1,15 @@
+# NEW FEATURE
+
+If you are using branches with names like `TASK-321-some-description` memtask
+will insert `TASK-321` before any time insert, useful when you use it with
+JIRA or similar issues trackers.
+
+Instead simple `#time 0h 4m` you will get `TASK-321 #time 0h 4m`.
+
+Branch checked every 5 minutes and you can change it in settings.
+
+Hotkeys for this: `ctrl+alt+i` and `ctrl+cmd+i` on OSX.
+
+Also improved plugin start time in this release.
+
+# Feel free to create issues if you have some problems with plugin using.

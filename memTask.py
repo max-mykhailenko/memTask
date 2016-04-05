@@ -57,7 +57,6 @@ class memTask(sublime_plugin.WindowCommand):
         self.currentBranch = None
 
     def ElapsedTime(self):
-        # print('tick: ' + str(time.time()))
         global countingInProgress
 
         if self.stopTimer is False:
@@ -70,6 +69,8 @@ class memTask(sublime_plugin.WindowCommand):
                     with open(self.dirSep.join([sublime.active_window().folders()[0], '.git', 'HEAD']) , "r") as headFile:
                         self.currentBranch = headFile.read().split('/')[-1].replace('\n', '')
                         headFile.close()
+                except Exception as e:
+                    print("No git :(", e)
                 except IOError as e:
                     print('No git :(')
 
@@ -258,17 +259,13 @@ class InsertTimeCommand(sublime_plugin.TextCommand):
         branchName = ''
         if MT.currentBranch is not None:
             splittedName = MT.currentBranch.split('-')
-            if len(splittedName) > 2:
+            if len(splittedName) >= 2:
                 branchName = splittedName[0] + '-' + splittedName[1] + ' '
         self.view.insert(edit, pos.begin(), branchName + '#time ' + MT.SecToHMfull(TT['fromLastCommit']))
         TT['fromLastCommit'] = 0
 
 
 class memTaskEventHandler(sublime_plugin.EventListener):
-    def __init__(self):
-        global MT
-        MT = None
-
     def on_modified(self, view):
         global MT
         global timeoutInProgress
@@ -289,7 +286,7 @@ class memTaskEventHandler(sublime_plugin.EventListener):
             if wasInit:
                 if timeoutInProgress is False:
                     timeoutInProgress = True
-                    sublime.set_timeout(lambda: self.checkCounterAndRun(), 5000)
+                    self.checkCounterAndRun()
             else:
                 MT.ElapsedTime()
 
@@ -305,6 +302,5 @@ class memTaskEventHandler(sublime_plugin.EventListener):
             MT.fileView = view
 
     def on_post_save_async(self, view):
-        global MT
         if MT and MT.base:
             MT.WriteBaseToFile(MT.base)
