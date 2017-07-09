@@ -1,0 +1,2 @@
+- remove annoying `no git :(` message in console
+- add ability to recreate database file when json in current file broken
