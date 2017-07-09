@@ -69,10 +69,9 @@ class memTask(sublime_plugin.WindowCommand):
                     with open(self.dirSep.join([sublime.active_window().folders()[0], '.git', 'HEAD']) , "r") as headFile:
                         self.currentBranch = headFile.read().split('/')[-1].replace('\n', '')
                         headFile.close()
-                except Exception as e:
-                    print("No git :(", e)
-                except IOError as e:
-                    print('No git :(')
+                except:
+                    # print("No git :(")
+                    pass
 
             if timeSec > self.setting['idle']:
                 self.stopTimer = True
@@ -121,11 +120,11 @@ class memTask(sublime_plugin.WindowCommand):
 
     def ReadBaseFromFile(self):
         try:
-            with open(self.setting['db_path'], "r") as json_data:
+            with open(self.setting['db_path'], "r", encoding="utf-8") as json_data:
                 data = json.load(json_data)
                 json_data.close()
                 return data
-        except IOError as e:
+        except:
             self.WriteBaseToFile({})
             data = {}
             print('memTask: Database file created.' + str(e))
