@@ -124,11 +124,18 @@ class memTask(sublime_plugin.WindowCommand):
                 data = json.load(json_data)
                 json_data.close()
                 return data
-        except:
+        except IOError as e:
             self.WriteBaseToFile({})
             data = {}
             print('memTask: Database file created.' + str(e))
             return data
+        except:
+            isSure = sublime.ok_cancel_dialog('memTask database file contains incorrect json. Fix it or create new one now. Create a new empty database file?')
+            if isSure is True:
+                self.WriteBaseToFile({})
+                data = {}
+                print('memTask: Database file recreated.')
+                return data
 
     def WriteBaseToFile(self, data):
         json_data_file = open(self.setting['db_path'], "w+")
