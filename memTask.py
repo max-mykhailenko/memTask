@@ -9,6 +9,8 @@ import re
 from pprint import pprint
 from math import floor
 import time
+import subprocess
+import string
 
 try:
     # Python 3 have OrderedDict
@@ -45,7 +47,8 @@ class memTask(sublime_plugin.WindowCommand):
             'db_path': self.dirSep.join(dbPath),
             'idle': pluginSettings.get('idle'),
             'date_format': pluginSettings.get('date_format'),
-            'branch_check_interval': pluginSettings.get('branch_check_interval')
+            # 'branch_check_interval': pluginSettings.get('branch_check_interval')
+            'branch_check_interval': 5
         }
 
         self.stopTimer = True
@@ -66,11 +69,27 @@ class memTask(sublime_plugin.WindowCommand):
             if (self.lastChangeTime - self.branchCheckTime).seconds > self.setting['branch_check_interval']:
                 self.branchCheckTime = self.lastChangeTime
                 try:
-                    with open(self.dirSep.join([sublime.active_window().folders()[0], '.git', 'HEAD']) , "r") as headFile:
+                    folders = sublime.active_window().folders()
+                    if len(folders) == 0:
+                        raise Exception('No folders')
+                    workingFolder = folders[0]
+                    bashCommand = 'cd "' + workingFolder + '" && git rev-parse --show-toplevel'
+                    process = subprocess.Popen(
+                        bashCommand,
+                        shell=True,
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
+                    gitFolder, error = process.communicate()
+                    if error:
+                        raise Exception(error)
+                    gitFolder = gitFolder.decode('utf-8')
+                    gitFolder = gitFolder.replace('\n', '')
+                    with open(self.dirSep.join([gitFolder, '.git', 'HEAD']) , "r") as headFile:
                         self.currentBranch = headFile.read().split('/')[-1].replace('\n', '')
                         headFile.close()
-                except:
-                    # print("No git :(")
+                except Exception as error:
+                    # print("No git :(", repr(error))
                     pass
 
             if timeSec > self.setting['idle']:
@@ -263,12 +282,13 @@ class InsertTimeCommand(sublime_plugin.TextCommand):
         self.view = self.view.window().active_view()
         pos = self.view.sel()[0]
         branchName = ''
-        if MT.currentBranch is not None:
-            splittedName = MT.currentBranch.split('-')
-            if len(splittedName) >= 2:
-                branchName = splittedName[0] + '-' + splittedName[1] + ' '
-        self.view.insert(edit, pos.begin(), branchName + '#time ' + MT.SecToHMfull(TT['fromLastCommit']))
-        TT['fromLastCommit'] = 0
+        if MT is not None:
+            if MT.currentBranch is not None:
+                splittedName = MT.currentBranch.split('-')
+                if len(splittedName) >= 2:
+                    branchName = splittedName[0] + '-' + splittedName[1] + ' '
+            self.view.insert(edit, pos.begin(), branchName + '#time ' + MT.SecToHMfull(TT['fromLastCommit']))
+            TT['fromLastCommit'] = 0
 
 
 class memTaskEventHandler(sublime_plugin.EventListener):

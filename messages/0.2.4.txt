@@ -1,0 +1,1 @@
+- improve git finding in project. Now you can add folders to the project from any level of your git repository
